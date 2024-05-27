@@ -9,6 +9,7 @@ pipeline {
         jdk "jdk21"
         maven "maven"
     }
+
     stages {
         stage('Git Checkout') {
             steps {
@@ -19,48 +20,71 @@ pipeline {
                 }
             }
         }
-    stage('Compile') {
-        steps {
-            script {
-                try {
-                    sh 'mvn clean'
-                    sh 'mvn compile'
-                } catch (Exception e) {
-                    handleFailure("Compile", e)
-                }
-            }
-        }
-    }
 
-    stage('Test') {
-        steps {
-            script {
-                try {
-                    sh 'mvn test'
-                    sh 'mvn verify'
-                } catch (Exception e) {
-                    handleFailure('Test', e)
-                }
+        stage('Merge Development to Feature Branch') {
+            when {
+                expression { env.BRANCH_NAME ==~ /^feature\/.*$/ }
             }
-        }
-    }
-    stage('Code Quality') {
-        steps {
-            script {
-                try {
-                    withSonarQubeEnv('sonarqube') {
-                        sh 'mvn sonar:sonar'
+            steps {
+                script {
+                    try {
+                        sh """
+                            git fetch origin
+                            git checkout ${env.BRANCH_NAME}
+                            git merge origin/development
+                        """
+                    } catch (Exception e) {
+                        handleFailure("Merge Development to Feature", e)
                     }
-                } catch (Exception e) {
-                    handleFailure("Code Quality", e)
                 }
             }
         }
-    }
-    stage("Quality Gate") {
-        steps {
-            timeout(time: 2, unit: 'MINUTES') {
-                waitForQualityGate abortPipeline: true
+
+        stage('Compile') {
+            steps {
+                script {
+                    try {
+                        sh 'mvn clean'
+                        sh 'mvn compile'
+                    } catch (Exception e) {
+                        handleFailure("Compile", e)
+                    }
+                }
+            }
+        }
+
+        stage('Test') {
+            steps {
+                script {
+                    try {
+                        sh 'mvn test'
+                        sh 'mvn verify'
+                    } catch (Exception e) {
+                        handleFailure('Test', e)
+                    }
+                }
+            }
+        }
+
+        stage('Code Quality') {
+            steps {
+                script {
+                    try {
+                        withSonarQubeEnv('sonarqube') {
+                            sh 'mvn sonar:sonar'
+                        }
+                    } catch (Exception e) {
+                        handleFailure("Code Quality", e)
+                    }
+                }
+            }
+        }
+
+        stage("Quality Gate") {
+            steps {
+                timeout(time: 2, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
             }
         }
     }

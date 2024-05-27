@@ -44,6 +44,26 @@ pipeline {
             }
         }
     }
+    stage('Code Quality') {
+        steps {
+            script {
+                try {
+                    withSonarQubeEnv('sonarqube') {
+                        sh 'mvn sonar:sonar'
+                    }
+                } catch (Exception e) {
+                    handleFailure("Code Quality", e)
+                }
+            }
+        }
+    }
+    stage("Quality Gate") {
+        steps {
+            timeout(time: 2, unit: 'MINUTES') {
+                waitForQualityGate abortPipeline: true
+            }
+        }
+    }
 }
 
 def handleFailure(stage, exception) {

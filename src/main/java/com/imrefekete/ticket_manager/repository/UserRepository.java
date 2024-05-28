@@ -1,2 +1,4 @@
-package com.imrefekete.ticket_manager.repository;public class UserRepository {
+package com.imrefekete.ticket_manager.repository;
+
+public class UserRepository {
 }

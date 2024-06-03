@@ -4,6 +4,8 @@ target/
 !**/src/test/**/target/
 
 .env
+application.properties
+
 ### IntelliJ IDEA ###
 .idea/
 *.iws

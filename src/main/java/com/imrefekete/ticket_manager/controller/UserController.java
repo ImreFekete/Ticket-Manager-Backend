@@ -1,2 +1,10 @@
-package com.imrefekete.ticket_manager.controller;public class UserController {
+package com.imrefekete.ticket_manager.controller;
+
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/user")
+public class UserController {
+
 }

@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "users")
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
     private int user_id;
 
@@ -28,6 +28,7 @@ public class User {
     @Column(name = "user_email")
     private String email;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "user_role")
     private Role role;
 }

@@ -1,4 +1,4 @@
-package com.imrefekete.ticket_manager.request;
+package com.imrefekete.ticket_manager.model.request;
 
 import lombok.*;
 

@@ -1,6 +1,6 @@
 package com.imrefekete.ticket_manager.controller;
 
-import com.imrefekete.ticket_manager.request.AuthRequest;
+import com.imrefekete.ticket_manager.model.request.AuthRequest;
 import com.imrefekete.ticket_manager.service.AuthenticationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

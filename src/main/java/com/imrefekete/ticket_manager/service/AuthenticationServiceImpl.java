@@ -1,8 +1,8 @@
 package com.imrefekete.ticket_manager.service;
 
-import com.imrefekete.ticket_manager.request.AuthRequest;
-import com.imrefekete.ticket_manager.response.AuthResponse;
-import com.imrefekete.ticket_manager.response.ErrorResponse;
+import com.imrefekete.ticket_manager.model.request.AuthRequest;
+import com.imrefekete.ticket_manager.model.response.AuthResponse;
+import com.imrefekete.ticket_manager.model.response.ErrorResponse;
 import com.imrefekete.ticket_manager.security.JwtService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

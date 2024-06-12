@@ -1,4 +1,4 @@
-package com.imrefekete.ticket_manager.response;
+package com.imrefekete.ticket_manager.model.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

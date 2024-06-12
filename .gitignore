@@ -4,8 +4,7 @@ target/
 !**/src/test/**/target/
 
 .env
-application.properties
-
+./keycloak
 ### IntelliJ IDEA ###
 .idea/
 *.iws

@@ -1,6 +1,6 @@
 package com.imrefekete.ticket_manager.service;
 
-import com.imrefekete.ticket_manager.model.User;
+import com.imrefekete.ticket_manager.model.entity.User;
 import com.imrefekete.ticket_manager.repository.UserRepository;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

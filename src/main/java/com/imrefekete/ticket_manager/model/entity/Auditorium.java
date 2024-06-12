@@ -1,4 +1,4 @@
-package com.imrefekete.ticket_manager.model;
+package com.imrefekete.ticket_manager.model.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

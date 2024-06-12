@@ -1,4 +1,4 @@
-package com.imrefekete.ticket_manager.model;
+package com.imrefekete.ticket_manager.model.entity;
 
 import com.imrefekete.ticket_manager.enums.Role;
 import jakarta.persistence.*;

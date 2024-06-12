@@ -4,12 +4,12 @@ target/
 !**/src/test/**/target/
 
 .env
-./keycloak
 ### IntelliJ IDEA ###
 .idea/
 *.iws
 *.iml
 *.ipr
+./keycloak/
 
 ### Eclipse ###
 .apt_generated

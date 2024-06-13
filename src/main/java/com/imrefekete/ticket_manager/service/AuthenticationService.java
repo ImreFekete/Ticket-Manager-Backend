@@ -7,5 +7,5 @@ import org.springframework.http.ResponseEntity;
 public interface AuthenticationService {
 
     ResponseEntity<?> authenticate(AuthRequest authRequest);
-    ResponseEntity<?> register(RegisterRequest registerRequest);
+    long register(RegisterRequest registerRequest);
 }

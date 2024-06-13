@@ -28,13 +28,12 @@ public class SecurityConfig {
         this.userDetails = userDetails;
     }
 
-    //Test Filterchain
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationProvider authenticationProvider, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
 
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/api/auth/login")
+                        .requestMatchers("/api/auth/**")
                         .permitAll()
                         .anyRequest()
                         .authenticated()

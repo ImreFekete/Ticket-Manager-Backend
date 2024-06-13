@@ -1,9 +1,12 @@
 package com.imrefekete.ticket_manager.controller;
 
 import com.imrefekete.ticket_manager.model.request.AuthRequest;
+import com.imrefekete.ticket_manager.model.request.RegisterRequest;
 import com.imrefekete.ticket_manager.service.AuthenticationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.net.URI;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -18,5 +21,13 @@ public class AuthController {
     @PostMapping(value = "/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest authRequest) {
         return authService.authenticate(authRequest);
+    }
+
+    @ResponseBody
+    @PostMapping(value = "/register")
+    public ResponseEntity<?> register(@RequestBody RegisterRequest registerRequest) {
+        long userId = authService.register(registerRequest);
+        URI uri = URI.create(String.format("/api/auth/%d", userId));
+        return ResponseEntity.created(uri).build();
     }
 }

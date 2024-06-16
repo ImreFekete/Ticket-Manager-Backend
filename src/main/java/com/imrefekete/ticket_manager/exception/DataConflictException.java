@@ -1,7 +1,7 @@
 package com.imrefekete.ticket_manager.exception;
 
-public class UserNameInUseException extends RuntimeException {
-    public UserNameInUseException(String message) {
+public class DataConflictException extends RuntimeException {
+    public DataConflictException(String message) {
         super(message);
     }
 }

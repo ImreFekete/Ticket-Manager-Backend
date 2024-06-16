@@ -1,6 +1,7 @@
 package com.imrefekete.ticket_manager.service;
 
 import com.imrefekete.ticket_manager.enums.Role;
+import com.imrefekete.ticket_manager.exception.DataConflictException;
 import com.imrefekete.ticket_manager.model.entity.User;
 import com.imrefekete.ticket_manager.model.request.AuthRequest;
 import com.imrefekete.ticket_manager.model.request.RegisterRequest;
@@ -39,7 +40,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public long register(RegisterRequest registerRequest) {
+    public long register(RegisterRequest registerRequest) throws DataConflictException {
+        if (userRepository.findUserByUsername(registerRequest.getUserName()).isPresent()) {
+            throw new DataConflictException("Username is already in use");
+        }
+        if (userRepository.findUserByEmail(registerRequest.getEmail()).isPresent()) {
+            throw new DataConflictException("Email is already in use");
+        }
         User newUser = User.builder()
                 .username(registerRequest.getUserName())
                 .firstName(registerRequest.getFirstName())

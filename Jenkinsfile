@@ -71,7 +71,7 @@ pipeline {
                 script {
                     try {
                         withSonarQubeEnv('sonarqube') {
-                            sh 'mvn sonar:sonar'
+                            sh 'mvn sonar:sonar -Pcoverage'
                         }
                     } catch (Exception e) {
                         handleFailure("Code Quality", e)

@@ -1,11 +1,11 @@
 package com.imrefekete.ticket_manager.service;
 
+import com.imrefekete.ticket_manager.enums.Role;
 import com.imrefekete.ticket_manager.exception.DataConflictException;
 import com.imrefekete.ticket_manager.model.entity.User;
 import com.imrefekete.ticket_manager.model.request.AuthRequest;
 import com.imrefekete.ticket_manager.model.request.RegisterRequest;
 import com.imrefekete.ticket_manager.model.response.AuthResponse;
-import com.imrefekete.ticket_manager.model.response.ErrorResponse;
 import com.imrefekete.ticket_manager.repository.UserRepository;
 import com.imrefekete.ticket_manager.security.JwtService;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -23,13 +22,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.Collections;
+import java.time.LocalDate;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class AuthenticationServiceImplTest {
 
@@ -57,89 +54,128 @@ class AuthenticationServiceImplTest {
     }
 
     @Test
-    void testRegisterUsernameAlreadyInUse() {
-        RegisterRequest request = new RegisterRequest();
-        request.setUserName("testuser");
-        when(userRepository.findUserByUsername("testuser")).thenReturn(Optional.of(new User()));
+    void testRegister_success() throws DataConflictException {
+        RegisterRequest registerRequest = new RegisterRequest();
+        registerRequest.setUserName("testUser");
+        registerRequest.setFirstName("John");
+        registerRequest.setLastName("Doe");
+        registerRequest.setDateOfBirth(LocalDate.of(2000, 1, 1));
+        registerRequest.setPassword("password");
+        registerRequest.setEmail("test@example.com");
+
+        User savedUser = User.builder()
+                .userId(1)
+                .username(registerRequest.getUserName())
+                .firstName(registerRequest.getFirstName())
+                .lastName(registerRequest.getLastName())
+                .dateOfBirth(registerRequest.getDateOfBirth())
+                .password("encodedPassword")
+                .email(registerRequest.getEmail())
+                .role(Role.USER)
+                .build();
+
+        when(userRepository.findUserByUsername(registerRequest.getUserName())).thenReturn(Optional.empty());
+        when(userRepository.findUserByEmail(registerRequest.getEmail())).thenReturn(Optional.empty());
+        when(passwordEncoder.encode(registerRequest.getPassword())).thenReturn("encodedPassword");
+        when(userRepository.save(any(User.class))).thenReturn(savedUser);
+
+        long userId = authenticationService.register(registerRequest);
+
+        assertEquals(1L, userId);
+        verify(userRepository).findUserByUsername(registerRequest.getUserName());
+        verify(userRepository).findUserByEmail(registerRequest.getEmail());
+        verify(passwordEncoder).encode(registerRequest.getPassword());
+        verify(userRepository).save(any(User.class));
+    }
+
+    @Test
+    void testRegister_usernameConflict() {
+        RegisterRequest registerRequest = new RegisterRequest();
+        registerRequest.setUserName("testUser");
+        registerRequest.setEmail("test@example.com");
+
+        when(userRepository.findUserByUsername(registerRequest.getUserName())).thenReturn(Optional.of(new User()));
 
         DataConflictException exception = assertThrows(DataConflictException.class, () -> {
-            authenticationService.register(request);
+            authenticationService.register(registerRequest);
         });
 
         assertEquals("Username is already in use", exception.getMessage());
+        verify(userRepository).findUserByUsername(registerRequest.getUserName());
+        verify(userRepository, never()).findUserByEmail(registerRequest.getEmail());
+        verify(passwordEncoder, never()).encode(anyString());
+        verify(userRepository, never()).save(any(User.class));
     }
 
     @Test
-    void testRegisterEmailAlreadyInUse() {
-        RegisterRequest request = new RegisterRequest();
-        request.setEmail("test@example.com");
-        when(userRepository.findUserByEmail("test@example.com")).thenReturn(Optional.of(new User()));
+    void testRegister_emailConflict() {
+        RegisterRequest registerRequest = new RegisterRequest();
+        registerRequest.setUserName("testUser");
+        registerRequest.setEmail("test@example.com");
+
+        when(userRepository.findUserByUsername(registerRequest.getUserName())).thenReturn(Optional.empty());
+        when(userRepository.findUserByEmail(registerRequest.getEmail())).thenReturn(Optional.of(new User()));
 
         DataConflictException exception = assertThrows(DataConflictException.class, () -> {
-            authenticationService.register(request);
+            authenticationService.register(registerRequest);
         });
 
         assertEquals("Email is already in use", exception.getMessage());
+        verify(userRepository).findUserByUsername(registerRequest.getUserName());
+        verify(userRepository).findUserByEmail(registerRequest.getEmail());
+        verify(passwordEncoder, never()).encode(anyString());
+        verify(userRepository, never()).save(any(User.class));
     }
 
     @Test
-    void testRegisterSuccess() {
-        RegisterRequest request = new RegisterRequest();
-        request.setUserName("testuser");
-        request.setEmail("test@example.com");
-        request.setPassword("password");
-
-        when(userRepository.findUserByUsername("testuser")).thenReturn(Optional.empty());
-        when(userRepository.findUserByEmail("test@example.com")).thenReturn(Optional.empty());
-        when(passwordEncoder.encode("password")).thenReturn("encodedPassword");
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
-            User user = invocation.getArgument(0);
-            user.setUserId(1);
-            return user;
-        });
-
-        long userId = authenticationService.register(request);
-        assertEquals(1, userId);
-    }
-
-    @Test
-    void testAuthenticateSuccess() {
+    void testAuthenticate_success() {
         AuthRequest authRequest = new AuthRequest();
-        authRequest.setUsername("testuser");
+        authRequest.setUsername("testUser");
         authRequest.setPassword("password");
 
         Authentication authentication = mock(Authentication.class);
-        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-                .thenReturn(authentication);
-        when(authentication.getName()).thenReturn("testuser");
+        UserDetails userDetails = mock(UserDetails.class);
+        User user = new User();
+        user.setUserId(1);
+        user.setUsername("testUser");
 
-        UserDetails userDetails = new org.springframework.security.core.userdetails.User("testuser", "password", Collections.emptyList());
-        when(userDetailsService.loadUserByUsername("testuser")).thenReturn(userDetails);
-        when(jwtService.generateToken(userDetails)).thenReturn("testToken");
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(authentication);
+        when(authentication.getName()).thenReturn("testUser");
+        when(userRepository.findUserByUsername("testUser")).thenReturn(Optional.of(user));
+        when(userDetailsService.loadUserByUsername("testUser")).thenReturn(userDetails);
+        when(jwtService.generateToken(userDetails)).thenReturn("token");
 
         ResponseEntity<?> response = authenticationService.authenticate(authRequest);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response);
+        assertTrue(response.getBody() instanceof AuthResponse);
         AuthResponse authResponse = (AuthResponse) response.getBody();
-        assertNotNull(authResponse);
-        assertEquals("testuser", authResponse.getName());
-        assertEquals("testToken", authResponse.getToken());
+        assertEquals(1L, authResponse.getUserId());
+        assertEquals("token", authResponse.getToken());
+
+        verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
+        verify(userRepository).findUserByUsername("testUser");
+        verify(userDetailsService).loadUserByUsername("testUser");
+        verify(jwtService).generateToken(userDetails);
     }
 
     @Test
-    void testAuthenticateFailure() {
+    void testAuthenticate_badCredentials() {
         AuthRequest authRequest = new AuthRequest();
-        authRequest.setUsername("testuser");
+        authRequest.setUsername("testUser");
         authRequest.setPassword("password");
 
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-                .thenThrow(new BadCredentialsException("Invalid username or password"));
+                .thenThrow(new BadCredentialsException("Bad credentials"));
 
-        ResponseEntity<?> response = authenticationService.authenticate(authRequest);
+        BadCredentialsException exception = assertThrows(BadCredentialsException.class, () -> {
+            authenticationService.authenticate(authRequest);
+        });
 
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        ErrorResponse errorResponse = (ErrorResponse) response.getBody();
-        assertNotNull(errorResponse);
-        assertEquals("Invalid username or password", errorResponse.getMessage());
+        assertEquals("Bad credentials", exception.getMessage());
+        verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
+        verify(userRepository, never()).findUserByUsername(anyString());
+        verify(userDetailsService, never()).loadUserByUsername(anyString());
+        verify(jwtService, never()).generateToken(any(UserDetails.class));
     }
 }

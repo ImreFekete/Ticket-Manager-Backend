@@ -8,6 +8,6 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AuthResponse {
-    private String name;
+    private long userId;
     private String token;
 }

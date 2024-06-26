@@ -71,7 +71,7 @@ pipeline {
                 script {
                     try {
                         withSonarQubeEnv('sonarqube') {
-                            sh 'mvn sonar:sonar -Pcoverage'
+                            sh 'mvn sonar:sonar -Dsonar.coverage.jacoco.xmlReportPaths=target/jacoco/jacoco.xml'
                         }
                     } catch (Exception e) {
                         handleFailure("Code Quality", e)
